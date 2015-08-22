@@ -16,7 +16,7 @@ def cluster(spm):
 	for m in range(1,spm.shape[0]+1):
 		for n in range(1,spm.shape[1]+1):
 			for o in range(1,spm.shape[2]+1):
-				surroundings=[spm_ext[m-1,n-1,o-1],
+				surroundings=[#spm_ext[m-1,n-1,o-1],
 				spm_ext[m-1,n-1,o],
 				spm_ext[m-1,n-1,o+1],
 				spm_ext[m-1,n,o-1],

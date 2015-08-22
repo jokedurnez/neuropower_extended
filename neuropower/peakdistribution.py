@@ -39,5 +39,4 @@ def peakp(x):
     y = []
     for i in x:
         y.append(1-integrate.quad(lambda x:peakdens3D(x,1),-20,i)[0])
-    y = [10**(-6) if x<10**(-6) else x for x in y]
     return y

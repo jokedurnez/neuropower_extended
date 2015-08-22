@@ -1,5 +1,5 @@
-import scipy.optimize
 import numpy as np
+import scipy
 
 """
 Fit a beta-uniform mixture model to a list of p-values.
@@ -20,11 +20,10 @@ def fbumnLL(pars,x):
 	l = pars[1]
 	L = l+(1-l)*a*x**(a-1)
 	negsumlog = -sum(np.log(L))
-	return negsumlog
+	return(negsumlog)
 
 def bumOptim(x,starts=1):
 	"""Searches the maximum likelihood estimator for the shape parameters of the BUM-model given a list of p-values"""
-	
 	a = np.random.uniform(0.05,0.95,(starts,))
 	l = np.random.uniform(0.05,0.95,(starts,))
 	best = []
