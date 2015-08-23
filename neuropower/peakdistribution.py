@@ -37,6 +37,7 @@ def peakdens3D(x,k):
 
 def peakp(x):
     y = []
-    for i in x:
+    iterator = (x,) if not isinstance(x, (tuple, list)) else x
+    for i in iterator:
         y.append(1-integrate.quad(lambda x:peakdens3D(x,1),-20,i)[0])
     return y

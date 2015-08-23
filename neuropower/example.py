@@ -22,7 +22,6 @@ spm = spm-enn.mu
 ps = spm.flatten()
 ps = [x for x in ps if x == x]
 
-twocol = cb.qualitative.Paired_12.mpl_colors
 
 xn = np.arange(-10,10,0.01)
 twocol = Paired_12.mpl_colors

@@ -22,7 +22,7 @@ def fbumnLL(pars,x):
 	negsumlog = -sum(np.log(L))
 	return(negsumlog)
 
-def bumOptim(x,starts=1):
+def bumOptim(x,starts=10):
 	"""Searches the maximum likelihood estimator for the shape parameters of the BUM-model given a list of p-values"""
 	a = np.random.uniform(0.05,0.95,(starts,))
 	l = np.random.uniform(0.05,0.95,(starts,))
