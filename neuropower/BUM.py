@@ -29,7 +29,7 @@ def bumOptim(x,starts=10):
 	best = []
 	par = []
 	x = np.asarray(x)
-	x = [0.00001 if y==0 else y for y in x] #optimiser is stuck when p-values == 0
+	x = [10**(-6) if y<= 10**(-6) else y for y in x] #optimiser is stuck when p-values == 0
 	for i in range(0,starts):
 		pars = np.array((a[i],l[i]))
 		opt = scipy.optimize.minimize(fbumnLL,[pars[0],pars[1]],method='L-BFGS-B',args=(x,),jac=fpLL,bounds=((0.00001,1),(0.00001,1)))

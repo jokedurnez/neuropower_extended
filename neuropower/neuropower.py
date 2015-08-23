@@ -1,7 +1,8 @@
 import scipy
 import numpy as np
-import neuropower
 import peakdistribution
+import matplotlib.pyplot as plt
+import pandas as pd
 
 """
 Fit a exponential-truncated normal mixture model to a list of peak height T-values.
@@ -10,6 +11,7 @@ http://www2.warwick.ac.uk/fac/sci/statistics/staff/academic-research/nichols/pre
 """
 
 def altPDF(peaks,mu,sigma=None,exc=None,method="RFT"):
+	peaks = (peaks,) if not isinstance(peaks, (tuple, list)) else peaks
 	#Returns probability density using a truncated normal distribution that we define as the distribution of local maxima in a GRF under the alternative hypothesis of activation
 	if method == "RFT":
 		num = 1/sigma*scipy.stats.norm(mu,sigma).pdf(peaks)
@@ -19,30 +21,14 @@ def altPDF(peaks,mu,sigma=None,exc=None,method="RFT"):
 		fa = [peakdistribution.peakdens3D(y-mu,1) for y in peaks]
 	return fa
 
-# example
-'''
-xn = np.arange(-10,10,0.01)
-yn=altPDF(xn,2,method="CS")
-yn2 = altPDF(xn,3,1,2,method="RFT")
-plt.plot(xn,yn); plt.ylim(0,2);plt.plot(xn,yn2); plt.show()
-
-'''
-
 def nulPDF(peaks,exc=None,method="RFT"):
 	#Returns probability density using the exponential function that defines the distribution of local maxima in a GRF under the null hypothesis of no activation as introduced in Cheng & Schwartzman, 2005
+	peaks = (peaks,) if not isinstance(peaks, (tuple, list)) else peaks
 	if method == "RFT":
 		f0 = [exc*np.exp(-exc*(x-exc)) for x in peaks]
 	elif method == "CS":
 		f0 = [peakdistribution.peakdens3D(x,1) for x in peaks]
 	return f0
-
-# example
-'''
-xn = np.arange(-10,10,0.01)
-yn=nulPDF(xn,method="CS")
-yn2 = nulPDF(xn,2,method="RFT")
-plt.plot(xn,yn); plt.ylim(0,2);plt.plot(xn,yn2); plt.show()
-'''
 
 def altCDF(peaks,mu,sigma=None,exc=None,method="RFT"):
 	if method == "RFT":
@@ -53,14 +39,6 @@ def altCDF(peaks,mu,sigma=None,exc=None,method="RFT"):
 		Fa = [1-peakdistribution.peakp(y-mu)[0] for y in peaks]
 	return Fa
 
-# example
-'''
-xn = np.arange(-10,10,0.01)
-yn=altCDF(xn,2,method="CS")
-yn2 = altCDF(xn,2,1,2,method="RFT")
-plt.plot(xn,yn); plt.ylim(0,2);plt.plot(xn,yn2); plt.show()
-'''
-
 def nulCDF(peaks,exc=None,method="RFT"):
 	"""Returns cumulative  density (p-values) using the exponential function that defines the distribution of local maxima in a GRF under the null hypothesis of no activation as introduced in Cheng & Schwartzman, 2005"""
 	peaks = (peaks,) if not isinstance(peaks, (tuple, list)) else peaks
@@ -70,36 +48,59 @@ def nulCDF(peaks,exc=None,method="RFT"):
 		F0 = [1-peakdistribution.peakp(y)[0] for y in peaks]
 	return F0
 
-# example
-'''
-xn = np.arange(-10,10,0.01).tolist()
-yn = nulCDF(xn,method="CS")
-yn2 = nulCDF(xn,2,method="RFT")
-plt.plot(xn,yn); plt.ylim(0,2);plt.plot(xn,yn2); plt.show()
-'''
-
-##############################I'm here ##############
-
-
 def mixprobdens(peaks,pi1,mu,sigma=None,exc=None,method="RFT"):
+	peaks = (peaks,) if not isinstance(peaks, (tuple, list)) else peaks
 	if method == "RFT":
-		f0=[(1-pi1)*nulPDF(peaks,exc=exc,method="RFT") for p in peaks]
-		fa=[pi1*altPDF(peaks,mu,sigma=sigma,exc=exc,method="RFT") for p in peaks]
+		f0=[nulPDF(p,exc=exc,method="RFT")[0] for p in peaks]
+		fa=[altPDF(p,mu,sigma=sigma,exc=exc,method="RFT") for p in peaks]
 	elif method == "CS":
-		f0 = [(1-pi1)*nulPDF(peaks,method="CS") for p in peaks]
-		fa = [pi1*altPDF(peaks,mu,method="CS") for p in peaks]
-	f=[x + y for x, y in zip(f0, fa)]
+		f0 = [nulPDF(p,method="CS")[0] for p in peaks]
+		fa = [altPDF(p,mu,method="CS")[0] for p in peaks]
+	f=[(1-pi1)*x + pi1*y for x, y in zip(f0, fa)]
 	return(f)
 
-def mixPDF_SLL_RFT(mu,sigma,peaks,pi1,exc):
+# show distributions
+'''
+xn = np.arange(-10,10,0.01).tolist()
+yn1a = [0.7*nulPDF(x,2,method="RFT")[0] for x in xn]
+yn1b = [0.3*altPDF(x,4,1,2,method="RFT") for x in xn]
+yn1t = mixprobdens(xn,0.3,4,1,2,method="RFT")
+plt.plot(xn,yn1a);plt.plot(xn,yn1b);plt.ylim(0,0.3);plt.plot(xn,yn1t); plt.show()
+
+yn2a= [0.7*nulPDF(x,method="CS")[0] for x in xn]
+yn2b = [0.3*altPDF(x,4,method="CS")[0] for x in xn]
+yn2t = mixprobdens(xn,0.3,4,method="CS")
+plt.plot(xn,yn2a); plt.ylim(0,1);plt.plot(xn,yn2b); plt.plot(xn,yn2t);plt.show()
+'''
+
+
+##############################I'm here ##############
+'''Load data for examples
+peaks_CS = pd.read_csv("/Users/Joke/Documents/Onderzoek/Studie_7_neuropower_improved/WORKDIR/locmax2.txt",sep="\t")
+peaks_CS['pval'] = [1-nulCDF(p,method="CS")[0] for p in peaks_CS.Value]
+peaks_RFT = peaks_CS[peaks_CS.Value>2]
+peaks_RFT['pval'] = [1-nulCDF(p,2,method="RFT")[0] for p in peaks_RFT.Value]
+bumCS = BUM.bumOptim(peaks_CS.pval)
+bumRFT = BUM.bumOptim(peaks_RFT.pval)
+'''
+
+def mixPDF_SLL_RFT(pars,peaks,pi1,exc):
+	mu = pars[0]
+	sigma = pars[1]
 	f = mixprobdens(peaks,pi1,mu,sigma,exc,method="RFT")
 	LL = -sum(np.log(f))
 	return(LL)
 
 def mixPDF_SLL_CS(mu,peaks,pi1):
-	f = [mixprobdens(x,pi1,mu,method="CS") for x in y]
+	f = [mixprobdens(x,pi1,mu,method="CS") for x in peaks]
 	LL = -sum([np.log(x) for x in f])
 	return(LL)
+
+# example
+'''
+sll_RFT = mixPDF_SLL_RFT([3,1],peaks_RFT.Value.tolist(),bumRFT['pi1'],2)
+sll_CS = mixPDF_SLL_CS(3,peaks_CS.Value.tolist(),bumCS['pi1'])
+'''
 
 def modelfit(peaks,pi1,exc=None,starts=1,method="RFT"):
 	"""Searches the maximum likelihood estimator for the mixture distribution of null and alternative"""
@@ -129,8 +130,11 @@ def modelfit(peaks,pi1,exc=None,starts=1,method="RFT"):
 		'delta': par[minind]}
 	return out
 
-modelfit(peaks.pval.tolist(),0.5,method="CS")
-
+# example
+'''
+mix_rft = modelfit(peaks_RFT.Value.tolist(),bumRFT['pi1'],exc=2,starts=2,method="RFT")
+mix_cs = modelfit(peaks_CS.Value.tolist(),bumCS['pi1'],starts=2,method="CS")
+'''
 
 def threshold():
 	""" Compute the significance threshold for a given Multiple comparison procedure"""
