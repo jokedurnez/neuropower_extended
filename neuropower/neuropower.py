@@ -1,4 +1,5 @@
 import scipy
+import scipy.stats as sst 
 import numpy as np
 import peakdistribution
 import matplotlib.pyplot as plt
@@ -11,11 +12,32 @@ http://www2.warwick.ac.uk/fac/sci/statistics/staff/academic-research/nichols/pre
 """
 
 def altPDF(peaks,mu,sigma=None,exc=None,method="RFT"):
+	"""
+	altPDF: Returns probability density using a truncated normal
+	distribution that we define as the distribution of local maxima in a
+	GRF under the alternative hypothesis of activation
+	parameters
+	----------
+	peaks: float or list of floats
+		list of peak heigths
+	mu: 
+	sigma:
+
+	returns
+	-------
+	fa: float or list 
+		probability density of the peaks heights under Ha  
+
+
+	!!! todo : change lists to numpy arrays
+	"""
 	peaks = (peaks,) if not isinstance(peaks, (tuple, list)) else peaks
-	#Returns probability density using a truncated normal distribution that we define as the distribution of local maxima in a GRF under the alternative hypothesis of activation
 	if method == "RFT":
-		num = 1/sigma*scipy.stats.norm(mu,sigma).pdf(peaks)
-		den = 1-scipy.stats.norm(mu,sigma).cdf(exc)
+		# assert type(sigma) is in [float, int]
+		# assert sigma is not None 
+		normal = sst.norm(mu,sigma)
+		num = 1/sigma * normal.pdf(peaks)
+		den = 1. - normal.cdf(exc)
 		fa = num/den
 	elif method == "CS":
 		fa = [peakdistribution.peakdens3D(y-mu,1) for y in peaks]
@@ -115,10 +137,10 @@ def modelfit(peaks,pi1,exc=None,starts=1,method="RFT"):
 			par.append(opt.x)
 		minind=best.index(np.nanmin(best))
 		out={'maxloglikelihood': best[minind],
-		'mu': par[minind][0],
-		'sigma': par[minind][0]}
-	if method == "CS":
-		mus = np.random.uniform(2,10,(starts,))
+				'mu': par[minind][0],
+				'sigma': par[minind][0]}
+		if method == "CS":
+			mus = np.random.uniform(2,10,(starts,))
 		best = []
 		par = []
 		for i in range(0,starts):
@@ -127,8 +149,8 @@ def modelfit(peaks,pi1,exc=None,starts=1,method="RFT"):
 			par.append(opt.x)
 		minind=best.index(np.nanmin(best))
 		out={'maxloglikelihood': best[minind],
-		'delta': par[minind]}
-	return out
+				'delta': par[minind]}
+		return out
 
 # example
 '''
@@ -140,21 +162,21 @@ def threshold():
 	""" Compute the significance threshold for a given Multiple comparison procedure"""
 
 
-
-	thresh <- seq(from=u,to=15,length=100)
-	cdfN <- exp(-u*(thresh-u))
-	cdfN_RFT <- resels*exp(-thresh^2/2)*thresh^2
-	ps <- estimates$peaks$pvalue
-	pvalms <- sort(ps)
-	orderpvalms <- rank(ps)
-	FDRqval <- (orderpvalms/length(ps))*alpha
-	pr <- ifelse(pvalms[orderpvalms] < FDRqval,1,0)
-	FDRc <- ifelse(sum(pr)==0,0,max(FDRqval[pr==1]))
-	cutoff.BH <- ifelse(FDRc==0,NA,thresh[min(which(cdfN<FDRc))])
-	# compute Qvalue threshold
-	Q <- qvalue(ps,fdr.level=alpha)
-	cutoff.Q <- ifelse(!is.list(Q),NA,ifelse(sum(Q$significant)==0,NA,min(estimates$peaks$peaks[Q$significant==TRUE])))
-	# compute threshold for uncorrected, FWE and RFT
-	cutoff.UN <- thresh[min(which(cdfN<alpha))]
-	cutoff.FWE <- thresh[min(which(cdfN<(alpha/length(estimates$peaks))))]
-	cutoff.RFT <- thresh[min(which(cdfN_RFT<alpha))]
+#   
+#   	thresh <- seq(from=u,to=15,length=100)
+#   	cdfN <- exp(-u*(thresh-u))
+#   	cdfN_RFT <- resels*exp(-thresh^2/2)*thresh^2
+#   	ps <- estimates$peaks$pvalue
+#   	pvalms <- sort(ps)
+#   	orderpvalms <- rank(ps)
+#   	FDRqval <- (orderpvalms/length(ps))*alpha
+#   	pr <- ifelse(pvalms[orderpvalms] < FDRqval,1,0)
+#   	FDRc <- ifelse(sum(pr)==0,0,max(FDRqval[pr==1]))
+#   	cutoff.BH <- ifelse(FDRc==0,NA,thresh[min(which(cdfN<FDRc))])
+#   	# compute Qvalue threshold
+#   	Q <- qvalue(ps,fdr.level=alpha)
+#   	cutoff.Q <- ifelse(!is.list(Q),NA,ifelse(sum(Q$significant)==0,NA,min(estimates$peaks$peaks[Q$significant==TRUE])))
+#   	# compute threshold for uncorrected, FWE and RFT
+#   	cutoff.UN <- thresh[min(which(cdfN<alpha))]
+#   	cutoff.FWE <- thresh[min(which(cdfN<(alpha/length(estimates$peaks))))]
+#   	cutoff.RFT <- thresh[min(which(cdfN_RFT<alpha))]
