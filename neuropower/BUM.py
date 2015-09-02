@@ -7,7 +7,7 @@ The BUM model is introduced in Pounds & Morris, 2003.
 """
 
 def fpLL(pars,x):
-	"""Returns the gradient function of the BUM model"""
+	# Returns the gradient function of the BUM model
 	a = pars[0]
 	l = pars[1]
 	dl = -sum((1-a*x**(a-1))/(a*(1-l)*x**(a-1)+l))
@@ -15,7 +15,7 @@ def fpLL(pars,x):
 	return np.asarray([dl,da])
 
 def fbumnLL(pars,x):
-	"""Returns the negative sum of the loglikelihood"""
+	#Returns the negative sum of the loglikelihood
 	a = pars[0]
 	l = pars[1]
 	L = l+(1-l)*a*x**(a-1)
@@ -23,6 +23,7 @@ def fbumnLL(pars,x):
 	return(negsumlog)
 
 def bumOptim(x,starts=10):
+	# Returns the MLE estimator for pi1, with the shaping parameters and the value of the negative sum of the loglikelihood
 	"""Searches the maximum likelihood estimator for the shape parameters of the BUM-model given a list of p-values"""
 	a = np.random.uniform(0.05,0.95,(starts,))
 	l = np.random.uniform(0.05,0.95,(starts,))

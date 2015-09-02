@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 """
-Fit a exponential-truncated normal mixture model to a list of peak height T-values.
+Fit a mixture model to a list of peak height T-values.
 The model is introduced in the HBM poster:
 http://www2.warwick.ac.uk/fac/sci/statistics/staff/academic-research/nichols/presentations/ohbm2015/Durnez-PeakPower-OHBM2015.pdf
 """
@@ -32,6 +32,7 @@ def altPDF(peaks,mu,sigma=None,exc=None,method="RFT"):
 	!!! todo : change lists to numpy arrays
 	"""
 	peaks = (peaks,) if not isinstance(peaks, (tuple, list)) else peaks
+	#Returns probability density of the alternative peak distribution
 	if method == "RFT":
 		# assert type(sigma) is in [float, int]
 		# assert sigma is not None 
@@ -44,15 +45,16 @@ def altPDF(peaks,mu,sigma=None,exc=None,method="RFT"):
 	return fa
 
 def nulPDF(peaks,exc=None,method="RFT"):
-	#Returns probability density using the exponential function that defines the distribution of local maxima in a GRF under the null hypothesis of no activation as introduced in Cheng & Schwartzman, 2005
+	#Returns probability density of the null peak distribution
 	peaks = (peaks,) if not isinstance(peaks, (tuple, list)) else peaks
 	if method == "RFT":
 		f0 = [exc*np.exp(-exc*(x-exc)) for x in peaks]
-	elif method == "CS":
+	elif method == "CS"
 		f0 = [peakdistribution.peakdens3D(x,1) for x in peaks]
 	return f0
 
 def altCDF(peaks,mu,sigma=None,exc=None,method="RFT"):
+	# Returns the CDF of the alternative peak distribution
 	if method == "RFT":
 		ksi = (peaks-mu)/sigma
 		alpha = (exc-mu)/sigma
@@ -62,7 +64,7 @@ def altCDF(peaks,mu,sigma=None,exc=None,method="RFT"):
 	return Fa
 
 def nulCDF(peaks,exc=None,method="RFT"):
-	"""Returns cumulative  density (p-values) using the exponential function that defines the distribution of local maxima in a GRF under the null hypothesis of no activation as introduced in Cheng & Schwartzman, 2005"""
+	# Returns the CDF of the null peak distribution
 	peaks = (peaks,) if not isinstance(peaks, (tuple, list)) else peaks
 	if method == "RFT":
 		F0 = [1-np.exp(-exc*(x-exc)) for x in peaks]
@@ -71,6 +73,7 @@ def nulCDF(peaks,exc=None,method="RFT"):
 	return F0
 
 def mixprobdens(peaks,pi1,mu,sigma=None,exc=None,method="RFT"):
+	# returns the PDF of the mixture of null and alternative distribution
 	peaks = (peaks,) if not isinstance(peaks, (tuple, list)) else peaks
 	if method == "RFT":
 		f0=[nulPDF(p,exc=exc,method="RFT")[0] for p in peaks]
@@ -81,32 +84,8 @@ def mixprobdens(peaks,pi1,mu,sigma=None,exc=None,method="RFT"):
 	f=[(1-pi1)*x + pi1*y for x, y in zip(f0, fa)]
 	return(f)
 
-# show distributions
-'''
-xn = np.arange(-10,10,0.01).tolist()
-yn1a = [0.7*nulPDF(x,2,method="RFT")[0] for x in xn]
-yn1b = [0.3*altPDF(x,4,1,2,method="RFT") for x in xn]
-yn1t = mixprobdens(xn,0.3,4,1,2,method="RFT")
-plt.plot(xn,yn1a);plt.plot(xn,yn1b);plt.ylim(0,0.3);plt.plot(xn,yn1t); plt.show()
-
-yn2a= [0.7*nulPDF(x,method="CS")[0] for x in xn]
-yn2b = [0.3*altPDF(x,4,method="CS")[0] for x in xn]
-yn2t = mixprobdens(xn,0.3,4,method="CS")
-plt.plot(xn,yn2a); plt.ylim(0,1);plt.plot(xn,yn2b); plt.plot(xn,yn2t);plt.show()
-'''
-
-
-##############################I'm here ##############
-'''Load data for examples
-peaks_CS = pd.read_csv("/Users/Joke/Documents/Onderzoek/Studie_7_neuropower_improved/WORKDIR/locmax2.txt",sep="\t")
-peaks_CS['pval'] = [1-nulCDF(p,method="CS")[0] for p in peaks_CS.Value]
-peaks_RFT = peaks_CS[peaks_CS.Value>2]
-peaks_RFT['pval'] = [1-nulCDF(p,2,method="RFT")[0] for p in peaks_RFT.Value]
-bumCS = BUM.bumOptim(peaks_CS.pval)
-bumRFT = BUM.bumOptim(peaks_RFT.pval)
-'''
-
 def mixPDF_SLL_RFT(pars,peaks,pi1,exc):
+	# Returns the negative sum of the loglikelihood of the PDF with RFT
 	mu = pars[0]
 	sigma = pars[1]
 	f = mixprobdens(peaks,pi1,mu,sigma,exc,method="RFT")
@@ -114,18 +93,13 @@ def mixPDF_SLL_RFT(pars,peaks,pi1,exc):
 	return(LL)
 
 def mixPDF_SLL_CS(mu,peaks,pi1):
+	# Returns the negative sum of the loglikelihood of the PDF with Cheng & Schwartzmans peak distribution
 	f = [mixprobdens(x,pi1,mu,method="CS") for x in peaks]
 	LL = -sum([np.log(x) for x in f])
 	return(LL)
 
-# example
-'''
-sll_RFT = mixPDF_SLL_RFT([3,1],peaks_RFT.Value.tolist(),bumRFT['pi1'],2)
-sll_CS = mixPDF_SLL_CS(3,peaks_CS.Value.tolist(),bumCS['pi1'])
-'''
-
 def modelfit(peaks,pi1,exc=None,starts=1,method="RFT"):
-	"""Searches the maximum likelihood estimator for the mixture distribution of null and alternative"""
+	# Searches the maximum likelihood estimator for the mixture distribution of null and alternative
 	if method == "RFT":
 		mus = np.random.uniform(exc+0.5,10,(starts,))
 		sigmas = np.random.uniform(0.1,5,(starts,))
@@ -152,14 +126,9 @@ def modelfit(peaks,pi1,exc=None,starts=1,method="RFT"):
 				'delta': par[minind]}
 		return out
 
-# example
 '''
-mix_rft = modelfit(peaks_RFT.Value.tolist(),bumRFT['pi1'],exc=2,starts=2,method="RFT")
-mix_cs = modelfit(peaks_CS.Value.tolist(),bumCS['pi1'],starts=2,method="CS")
-'''
-
 def threshold():
-	""" Compute the significance threshold for a given Multiple comparison procedure"""
+	# Compute the significance threshold for a given Multiple comparison procedure
 
 
 #   
@@ -180,3 +149,4 @@ def threshold():
 #   	cutoff.UN <- thresh[min(which(cdfN<alpha))]
 #   	cutoff.FWE <- thresh[min(which(cdfN<(alpha/length(estimates$peaks))))]
 #   	cutoff.RFT <- thresh[min(which(cdfN_RFT<alpha))]
+'''
