@@ -131,22 +131,22 @@ def threshold():
 	# Compute the significance threshold for a given Multiple comparison procedure
 
 
-#   
-#   	thresh <- seq(from=u,to=15,length=100)
-#   	cdfN <- exp(-u*(thresh-u))
-#   	cdfN_RFT <- resels*exp(-thresh^2/2)*thresh^2
-#   	ps <- estimates$peaks$pvalue
-#   	pvalms <- sort(ps)
-#   	orderpvalms <- rank(ps)
-#   	FDRqval <- (orderpvalms/length(ps))*alpha
-#   	pr <- ifelse(pvalms[orderpvalms] < FDRqval,1,0)
-#   	FDRc <- ifelse(sum(pr)==0,0,max(FDRqval[pr==1]))
-#   	cutoff.BH <- ifelse(FDRc==0,NA,thresh[min(which(cdfN<FDRc))])
-#   	# compute Qvalue threshold
-#   	Q <- qvalue(ps,fdr.level=alpha)
-#   	cutoff.Q <- ifelse(!is.list(Q),NA,ifelse(sum(Q$significant)==0,NA,min(estimates$peaks$peaks[Q$significant==TRUE])))
-#   	# compute threshold for uncorrected, FWE and RFT
-#   	cutoff.UN <- thresh[min(which(cdfN<alpha))]
-#   	cutoff.FWE <- thresh[min(which(cdfN<(alpha/length(estimates$peaks))))]
-#   	cutoff.RFT <- thresh[min(which(cdfN_RFT<alpha))]
+
+	thresh <- seq(from=u,to=15,length=100)
+	cdfN <- exp(-u*(thresh-u))
+	cdfN_RFT <- resels*exp(-thresh^2/2)*thresh^2
+	ps <- estimates$peaks$pvalue
+	pvalms <- sort(ps)
+	orderpvalms <- rank(ps)
+	FDRqval <- (orderpvalms/length(ps))*alpha
+	pr <- ifelse(pvalms[orderpvalms] < FDRqval,1,0)
+	FDRc <- ifelse(sum(pr)==0,0,max(FDRqval[pr==1]))
+	cutoff.BH <- ifelse(FDRc==0,NA,thresh[min(which(cdfN<FDRc))])
+	# compute Qvalue threshold
+	Q <- qvalue(ps,fdr.level=alpha)
+	cutoff.Q <- ifelse(!is.list(Q),NA,ifelse(sum(Q$significant)==0,NA,min(estimates$peaks$peaks[Q$significant==TRUE])))
+	# compute threshold for uncorrected, FWE and RFT
+	cutoff.UN <- thresh[min(which(cdfN<alpha))]
+	cutoff.FWE <- thresh[min(which(cdfN<(alpha/length(estimates$peaks))))]
+	cutoff.RFT <- thresh[min(which(cdfN_RFT<alpha))]
 '''
